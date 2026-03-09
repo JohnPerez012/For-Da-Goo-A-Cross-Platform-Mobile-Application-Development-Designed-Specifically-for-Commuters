@@ -8,6 +8,7 @@ node_modules/
 dist/
 web-build/
 expo-env.d.ts
+.env
 
 # Native
 .kotlin/
@@ -29,8 +30,14 @@ yarn-error.*
 # macOS
 .DS_Store
 *.pem
-
 # local env files
+.env*.local
+.env
+
+# Firebase configuration files (contains sensitive API keys)
+google-services.json
+GoogleService-Info.plist files
+.env
 .env*.local
 
 # typescript
@@ -41,3 +48,7 @@ app-example
 # generated native folders
 /ios
 /android
+
+
+# Api-Keys
+google-services.json
