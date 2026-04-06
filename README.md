@@ -94,7 +94,6 @@ FordaGo aims to solve transportation challenges for students in Northern Cebu by
 ```
 ├── app/                    # App screens and navigation
 │   ├── (tabs)/            # Tab-based navigation
-│   │   ├── index.tsx      # Home screen
 │   │   └── explore.tsx    # Main app screen with map
 │   └── _layout.tsx        # Root layout
 ├── components/            # Reusable components

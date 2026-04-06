@@ -1,20 +1,20 @@
-import { initializeApp } from 'firebase/app';
-import { getDatabase } from 'firebase/database';
+import { initializeApp } from "firebase/app";
+// 1. ADD THIS LINE
+import { getDatabase } from "firebase/database";
 
-// Your web app's Firebase configuration
-// Replace these with your actual Firebase project credentials
 const firebaseConfig = {
-  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  databaseURL: process.env.EXPO_PUBLIC_FIREBASE_DATABASE_URL,
-  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
+  apiKey: "AIzaSyAfDuA7YNUHrxhlcMsj8dFl6shT4pQw8YM",
+  authDomain: "fordago-f0028.firebaseapp.com",
+  projectId: "fordago-f0028",
+  // 2. ADD THIS LINE (Check your Firebase Console for the exact URL)
+  databaseURL: "https://fordago-f0028-default-rtdb.asia-southeast1.firebasedatabase.app", 
+  storageBucket: "fordago-f0028.firebasestorage.app",
+  messagingSenderId: "886761925170",
+  appId: "1:886761925170:web:c7224f154d43e23ba16a2b"
 };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// Initialize Realtime Database
+// 3. ADD AND EXPORT THIS
 export const database = getDatabase(app);

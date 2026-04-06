@@ -1,247 +1,349 @@
-import { Alert, StyleSheet, TouchableOpacity } from 'react-native';
-
 import { CebuMap } from '@/components/cebu-map';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Collapsible } from '@/components/ui/collapsible';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Fonts } from '@/constants/theme';
 import { useLocationSharing } from '@/hooks/use-location-sharing';
-import { Link } from 'expo-router';
-import { useEffect, useState } from 'react';
+import React, { useRef, useState } from 'react';
+import {
+  Alert,
+  Animated,
+  PanResponder,
+  SafeAreaView,
+  StatusBar,
+  StyleSheet,
+  TouchableOpacity,
+  View
+} from 'react-native';
 
-interface WeatherData {
-  current: {
-    temp_c: number;
-    condition: {
-      text: string;
-    };
-    humidity: number;
-  };
-  location: {
-    name: string;
-  };
-}
-
-export default function TabTwoScreen() {
-  const [weather, setWeather] = useState<WeatherData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  
-  // Generate a unique user ID (in production, use proper authentication)
+export default function ExploreScreen() {
   const [userId] = useState(() => `user_${Math.random().toString(36).substr(2, 9)}`);
-  
-  // Use location sharing hook
   const { isSharing, sharedLocations, startSharing, stopSharing } = useLocationSharing(userId);
 
-  useEffect(() => {
-    const fetchWeather = async () => {
-      try {
-        setLoading(true);
-        const API_KEY = process.env.EXPO_PUBLIC_WEATHER_API_KEY;
-        const city = 'Baguio';
-        const response = await fetch(
-          `https://api.weatherapi.com/v1/current.json?key=${API_KEY}&q=${city}&aqi=no`
-        );
+  // --- 1. DROPDOWN & MAP STATE ---
+  const [showBoundary, setShowBoundary] = useState(true);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [selectedRoute, setSelectedRoute] = useState("Select Route");
+  
+  const menuOptions = [
+    { label: "Via Kawit", type: "route" },
+    { label: "Via Bagay", type: "route" },
+    { label: "Both", type: "route" },
+    { label: "None", type: "route" },
+    { label: "Toggle Boundary", type: "action" },
+  ];
 
-        if (!response.ok) {
-          throw new Error('Failed to fetch weather');
+  // --- 2. SLIDING SHEET LOGIC (PanResponder) ---
+  const translateY = useRef(new Animated.Value(0)).current;
+
+  const panResponder = useRef(
+    PanResponder.create({
+      // Do not grab the touch immediately so the button can be pressed
+      onStartShouldSetPanResponder: () => false,
+      // Only start sliding if the user moves their finger more than 10 pixels vertically
+      onMoveShouldSetPanResponder: (evt, gestureState) => {
+        return Math.abs(gestureState.dy) > 10;
+      },
+      onPanResponderMove: (event, gestureState) => {
+        // Only allow dragging downwards (positive dy)
+        if (gestureState.dy > 0) {
+          translateY.setValue(gestureState.dy);
         }
-
-        const data = await response.json();
-        setWeather(data);
-        setError(null);
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-        setError(errorMessage + ' (Note: Weather API works on mobile, not web due to CORS)');
-        console.error('Weather fetch error:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchWeather();
-    
-    console.log('=== EXPLORE SCREEN MOUNTED ===');
-    console.log('Generated User ID:', userId);
-    console.log('📊 Initial active users:', Object.keys(sharedLocations).length);
-  }, [userId]);
+      },
+      onPanResponderRelease: (event, gestureState) => {
+        if (gestureState.dy > 100) {
+          // Snap down to a "Mini" state (showing just the handle and title)
+          Animated.spring(translateY, {
+            toValue: 130, 
+            useNativeDriver: true,
+            friction: 8,
+          }).start();
+        } else {
+          // Snap back up to full view
+          Animated.spring(translateY, {
+            toValue: 0,
+            useNativeDriver: true,
+            friction: 8,
+          }).start();
+        }
+      },
+    })
+  ).current;
 
   const handleTrackLocation = () => {
-    console.log('=== TRACK LOCATION BUTTON PRESSED ===');
-    console.log('Current isSharing state:', isSharing);
-    console.log('User ID:', userId);
-    console.log('Current shared locations:', sharedLocations);
-    console.log('📊 ACTIVE USERS SHARING LOCATION:', Object.keys(sharedLocations).length);
-    
     if (isSharing) {
-      console.log('Stopping location sharing...');
       stopSharing();
-      Alert.alert('Location Sharing', 'You stopped sharing your location');
+      Alert.alert('FordaGo', 'Tracking stopped.');
     } else {
-      console.log('Starting location sharing...');
       startSharing();
-      Alert.alert('Location Sharing', 'You are now sharing your location with all users');
+      Alert.alert('FordaGo', 'You are now live on the map!');
     }
-  }; 
-
-
+  };
 
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#1e1717ff', dark: '#010909ff' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
+    <ThemedView style={styles.container}>
+      <StatusBar barStyle="dark-content" />
+
+      {/* LAYER 1: FULL SCREEN MAP */}
+      <View style={styles.mapWrapper}>
+        <CebuMap 
+          sharedLocations={sharedLocations} 
+          activeRoute={selectedRoute} 
+          showBoundary={showBoundary}
         />
-      }>
-      <ThemedView style={[styles.titleContainer,{ justifyContent: 'center'}]}>
-        <ThemedText
-          type="title"
-          style={{
-            fontFamily: Fonts.rounded,
-            textAlign: 'center',
-            fontWeight: 'bold',
-          }}>
-          FordaGo app 
-        </ThemedText>
-      </ThemedView>
+      </View>
 
-      <ThemedText>
-        Brief Prototype Introduction to the Public Transportation Tracing Application
-      </ThemedText>
-      <Collapsible title = "About Us" >
-           <ThemedText style={{textAlign: 'justify'}}>
-            We are a group of{' '}
-              <ThemedText style={{fontWeight: '600', color: '#f4b300ff'}}>
-                Cebu Technological University
+      {/* LAYER 2: FLOATING TOP HEADER */}
+      <SafeAreaView style={styles.floatingHeader}>
+        <View style={styles.headerRow}>
+          
+          {/* COMPACT DROPDOWN */}
+          <View style={styles.dropdownWrapper}>
+            <TouchableOpacity 
+              style={styles.dropdownHeader} 
+              onPress={() => setIsDropdownOpen(!isDropdownOpen)}
+            >
+              <ThemedText style={styles.chevron}>
+                {isDropdownOpen ? "▲" : "▼"}
               </ThemedText>
-            {' '}students trying to solve main problems of public transportation
+            </TouchableOpacity>
+
+            {isDropdownOpen && (
+              <View style={styles.dropdownList}>
+                {menuOptions.map((option) => (
+                  <TouchableOpacity 
+                    key={option.label} 
+                    style={[
+                      styles.dropdownItem, 
+                      selectedRoute === option.label && styles.dropdownItemActive
+                    ]}
+                    onPress={() => {
+                      if (option.type === "route") setSelectedRoute(option.label);
+                      else if (option.label === "Toggle Boundary") setShowBoundary(!showBoundary);
+                      setIsDropdownOpen(false);
+                    }}
+                  >
+                    <ThemedText style={[
+                      styles.dropdownItemText, 
+                      selectedRoute === option.label && styles.dropdownItemTextActive
+                    ]}>
+                      {option.label === "Toggle Boundary" 
+                        ? (showBoundary ? "Hide Boundary" : "Show Boundary") 
+                        : option.label}
+                    </ThemedText>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
+
+          {/* HEADER INFO CARD */}
+          <View style={styles.headerCard}>
+            <ThemedText style={styles.titleText}>FordaGo Tracker</ThemedText>
+            <ThemedText style={styles.activeUsers}>
+              🟢 {Object.keys(sharedLocations || {}).length} Active Now
             </ThemedText>
+          </View>
+        </View>
+      </SafeAreaView>
 
-      </Collapsible>
-      <Collapsible title = "Our Goals">
-      <ThemedView style  = {{flexDirection: 'row' , gap: 8, marginBottom: 4}}>
-        <ThemedText>•</ThemedText>
-        <ThemedText style = {{flex: 1 , textAlign: 'justify'}}>To make public transportation easier and safer</ThemedText>
-      </ThemedView>
-      <ThemedView style  = {{flexDirection: 'row' , gap: 8, marginBottom: 4}}>
-      
-            <ThemedText>•</ThemedText>
-            <ThemedText style = {{flex: 1 , textAlign: 'justify'}}>  Implement Tracking for Public Vehicles to ensure proper time management </ThemedText>
-      
-      </ThemedView>
+      {/* LAYER 3: SLIDING BOTTOM SHEET */}
+      <Animated.View 
+        style={[
+          styles.bottomSheet, 
+          { transform: [{ translateY: translateY }] } 
+        ]}
+        {...panResponder.panHandlers} 
+      >
+        <View style={styles.sheetHandle} />
+        
+        <ThemedText style={styles.sheetTitle}>Trip Overview</ThemedText>
 
-      <ThemedView style={styles.buttonContainer}>
-        <Link href="/modal" asChild>
-          <TouchableOpacity
-            style={styles.buttonGreen}
-            activeOpacity={0.8}>
-            <ThemedText style={styles.buttonText}>Sign In</ThemedText>
+        <View style={styles.sheetContent}>
+          <TouchableOpacity 
+            style={[styles.mainButton, isSharing && styles.buttonActive]}
+            onPress={handleTrackLocation}
+            activeOpacity={0.8}
+          >
+            <ThemedText style={styles.buttonText}>
+              {isSharing ? 'STOP SHARING' : 'START MY LOCATION'}
+            </ThemedText>
           </TouchableOpacity>
-        </Link>
 
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => console.log("Button is Pressed")}
-          activeOpacity={0.8}>
-          <ThemedText style={styles.buttonText}>Contact Us</ThemedText>
-        </TouchableOpacity>
-      </ThemedView>
-      </Collapsible>
-      <Collapsible title="Track My Location">
-        <ThemedText style={{marginBottom: 10, textAlign: 'justify'}}>
-          {isSharing 
-            ? 'You are currently sharing your location with all users. Press the button below to stop sharing.' 
-            : 'Share your real-time location with all users of this app. Your location will be visible on the map.'}
-        </ThemedText>
-        <TouchableOpacity 
-          style={[styles.buttonTracker, isSharing && styles.buttonTrackerActive]}
-          onPress={handleTrackLocation}
-          activeOpacity={0.8}>
-          <ThemedText style={styles.buttonText}>
-            {isSharing ? 'Stop Sharing' : 'Start Sharing'}
-          </ThemedText>
-        </TouchableOpacity>
-        <ThemedText style={{marginTop: 10, fontSize: 12, opacity: 0.7}}>
-          Active users: {Object.keys(sharedLocations).length}
-        </ThemedText>
-        <ThemedText style={{marginTop: 5, fontSize: 10, opacity: 0.5, fontFamily: 'monospace'}}>
-          Your ID: {userId}
-        </ThemedText>
-        <ThemedText style={{marginTop: 5, fontSize: 10, opacity: 0.5}}>
-          Check browser console (F12) for detailed logs
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Map - Northern Cebu">
-        <ThemedText style={{marginBottom: 10}}>
-          Track public transportation routes in Northern Cebu
-        </ThemedText>
-        <CebuMap sharedLocations={sharedLocations} />
-      </Collapsible>
-      
-    </ParallaxScrollView>
+          <View style={styles.statusRow}>
+            <ThemedText style={styles.statusLabel}>Status:</ThemedText>
+            <ThemedText style={isSharing ? styles.statusActive : styles.statusInactive}>
+              {isSharing ? " ● Live Tracking" : " ○ Offline"}
+            </ThemedText>
+          </View>
+        </View>
+      </Animated.View>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    alignSelf: 'center'
+  container: { 
+    flex: 1,
+    backgroundColor: '#F2F2F7' 
   },
-  titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
+  mapWrapper: { 
+    ...StyleSheet.absoluteFillObject 
   },
-  button: {
-    backgroundColor: 'blue',
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderRadius: 8,
+  floatingHeader: {
+    position: 'absolute',
+    top: 50, 
+    left: 20,
+    right: 20,
+    zIndex: 20,
+  },
+  headerRow: {
+    flexDirection: 'row', 
+    alignItems: 'center'
+  },
+  headerCard: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 12,
+    marginLeft: 10,
     alignItems: 'center',
-    marginVertical: 20,
-    width: 100,
-    alignSelf: 'center',
-    zIndex: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  buttonGreen: {
-    backgroundColor: 'green',
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderRadius: 8,
+  titleText: { 
+    fontSize: 16, 
+    fontWeight: '800', 
+    color: '#1C1C1E' 
+  },
+  activeUsers: { 
+    fontSize: 11, 
+    fontWeight: '600',
+    color: '#34A853',
+  },
+  dropdownWrapper: {
+    zIndex: 30,
+  },
+  dropdownHeader: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
     alignItems: 'center',
-    marginVertical: 20,
-    width: 100,
-    alignSelf: 'center',
-    zIndex: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  buttonText: {
-    color: 'white',
+  chevron: {
+    color: '#007AFF',
     fontSize: 12,
-    fontWeight: 'bold',
-    fontFamily: 'Sans-Serif',
   },
-  buttonContainer: {
-    flexDirection: 'row',
-    gap: 12,
-    justifyContent: 'flex-start',
+  dropdownList: {
+    position: 'absolute',
+    top: 55,
+    left: 0,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    width: 160,
+    padding: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 10,
   },
-  buttonTracker: {
-    backgroundColor: 'red',
-    paddingVertical: 12,
-    paddingHorizontal: 12,
+  dropdownItem: {
+    padding: 12,
     borderRadius: 8,
-    alignItems: 'center',
-    marginVertical: 20,
-    width: 150,
-    alignSelf: 'center',
-    zIndex: 1,
+    marginVertical: 2,
   },
-  buttonTrackerActive: {
+  dropdownItemActive: {
+    backgroundColor: '#007AFF',
+  },
+  dropdownItemText: {
+    color: '#3A3A3C',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  dropdownItemTextActive: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+  },
+  bottomSheet: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    paddingHorizontal: 25,
+    paddingTop: 12,
+    paddingBottom: 40,
+    zIndex: 40,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 20,
+  },
+  sheetHandle: {
+    width: 40,
+    height: 5,
+    backgroundColor: '#D1D1D6',
+    borderRadius: 3,
+    alignSelf: 'center',
+    marginBottom: 15,
+  },
+  sheetTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#1C1C1E',
+    marginBottom: 15,
+  },
+  sheetContent: {
+    alignItems: 'center',
+    width: '100%',
+  },
+  mainButton: {
+    backgroundColor: '#F56476',
+    width: '100%',
+    height: 54, 
+    borderRadius: 16, 
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  buttonActive: { 
     backgroundColor: '#34A853',
+  },
+  buttonText: { 
+    color: 'white', 
+    fontWeight: 'bold', 
+    fontSize: 16,
+    letterSpacing: 0.5 
+  },
+  statusRow: {
+    flexDirection: 'row',
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  statusLabel: {
+    fontSize: 13,
+    color: '#8E8E93',
+    marginRight: 5,
+  },
+  statusActive: {
+    fontSize: 13,
+    color: '#34A853',
+    fontWeight: '700',
+  },
+  statusInactive: {
+    fontSize: 13,
+    color: '#8E8E93',
   },
 });
