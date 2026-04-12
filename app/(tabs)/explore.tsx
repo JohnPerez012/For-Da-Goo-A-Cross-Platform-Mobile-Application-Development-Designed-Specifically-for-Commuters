@@ -3,20 +3,13 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useLocationSharing } from '@/hooks/use-location-sharing';
 import React, { useRef, useState } from 'react';
-import {
-  Alert,
-  Animated,
-  PanResponder,
-  SafeAreaView,
-  StatusBar,
-  StyleSheet,
-  TouchableOpacity,
-  View
-} from 'react-native';
+import { Alert, Modal, SafeAreaView, StatusBar, StyleSheet, TouchableOpacity, View, Animated, PanResponder } from 'react-native';
 
 export default function ExploreScreen() {
   const [userId] = useState(() => `user_${Math.random().toString(36).substr(2, 9)}`);
   const { isSharing, sharedLocations, startSharing, stopSharing } = useLocationSharing(userId);
+  const [hasAgreed, setHasAgreed] = useState(false);
+  const [showAgreementModal, setShowAgreementModal] = useState(false);
 
   // --- 1. DROPDOWN & MAP STATE ---
   const [showBoundary, setShowBoundary] = useState(true);
@@ -69,14 +62,21 @@ export default function ExploreScreen() {
   ).current;
 
   const handleTrackLocation = () => {
-    if (isSharing) {
-      stopSharing();
-      Alert.alert('FordaGo', 'Tracking stopped.');
-    } else {
-      startSharing();
-      Alert.alert('FordaGo', 'You are now live on the map!');
-    }
-  };
+  // If they haven't agreed yet, don't start tracking—show the modal instead!
+  if (!hasAgreed) {
+    setShowAgreementModal(true);
+    return;
+  }
+
+  // If they HAVE agreed, proceed with your existing sharing logic
+  if (isSharing) {
+    stopSharing();
+    Alert.alert('FordaGo', 'Tracking stopped.');
+  } else {
+    startSharing();
+    Alert.alert('FordaGo', 'You are now live on the map!');
+  }
+};
 
   return (
     <ThemedView style={styles.container}>
@@ -176,6 +176,45 @@ export default function ExploreScreen() {
           </View>
         </View>
       </Animated.View>
+
+      {/* --- USER AGREEMENT MODAL --- */}
+      <Modal
+        visible={showAgreementModal}
+        transparent={true}
+        animationType="slide" // Slide up feels more natural on mobile
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.agreementCard}>
+            <ThemedText style={styles.agreementTitle}>Location Sharing</ThemedText>
+            <ThemedText style={styles.agreementText}>
+              To show your location to other students, FordaGo needs to collect your GPS data. 
+              Your location is only shared while "Sharing" is active.
+            </ThemedText>
+            
+            <View style={styles.modalButtons}>
+              <TouchableOpacity 
+                style={styles.cancelButton} 
+                onPress={() => setShowAgreementModal(false)}
+              >
+                <ThemedText style={styles.cancelButtonText}>Not Now</ThemedText>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.confirmButton} 
+                onPress={() => {
+                  setHasAgreed(true);
+                  setShowAgreementModal(false);
+                  startSharing(); // Immediately start after they agree
+                }}
+              >
+                <ThemedText style={styles.confirmButtonText}>Agree & Start</ThemedText>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+
     </ThemedView>
   );
 }
@@ -346,4 +385,74 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#8E8E93',
   },
+
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  agreementCard: {
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 24,
+    width: '90%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 20,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  cancelButton: {
+    flex: 1,
+    padding: 13,
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    fontSize: 15,
+    color: '#8E8E93',
+    fontWeight: 'bold',
+  },
+  confirmButton: {
+    flex: 2,
+    backgroundColor: '#F56476',
+    padding: 13,
+    borderRadius: 12,
+    alignItems: 'center',
+    shadowColor: '#F56476',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 6,
+  },
+  confirmButtonText: {
+    fontSize: 15,
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  agreementTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1C1C1E',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  agreementText: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#3A3A3C',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  
+
+
+
 });
