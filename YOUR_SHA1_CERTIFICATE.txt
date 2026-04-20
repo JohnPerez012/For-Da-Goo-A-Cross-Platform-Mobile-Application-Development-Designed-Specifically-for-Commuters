@@ -1,0 +1,62 @@
+╔══════════════════════════════════════════════════════════════╗
+║              YOUR SHA-1 CERTIFICATE FOUND!                   ║
+╚══════════════════════════════════════════════════════════════╝
+
+✅ SHA-1 Certificate (Debug):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+2C:7B:8C:60:75:24:97:37:F4:72:71:76:CD:2A:38:E5:31:0E:AF:A2
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 NEXT STEPS:
+
+1. Copy the SHA-1 above (the line with colons)
+
+2. Go to Firebase Console:
+   https://console.firebase.google.com
+
+3. Select your ForDaGoo project
+
+4. Click "Project Settings" (gear icon)
+
+5. Scroll down to "Your apps" section
+
+6. Find your Android app
+
+7. Click "Add fingerprint" button
+
+8. Paste this SHA-1:
+   2C:7B:8C:60:75:24:97:37:F4:72:71:76:CD:2A:38:E5:31:0E:AF:A2
+
+9. Click "Save"
+
+10. Download the updated google-services.json file
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📝 ADDITIONAL INFO:
+
+Certificate Type: Debug (for testing)
+Keystore Location: C:\Users\Acer\.android\debug.keystore
+Alias: androiddebugkey
+Valid Until: Feb 01, 2056
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️ IMPORTANT:
+
+This is your DEBUG certificate (for testing only).
+
+When you release your app to production, you'll need to:
+1. Generate a RELEASE keystore
+2. Get the SHA-1 from the release keystore
+3. Add that SHA-1 to Firebase as well
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ STEP 2 COMPLETE!
+
+Continue with Step 3 in GOOGLE_SIGNIN_CHECKLIST.txt
+
+╚══════════════════════════════════════════════════════════════╝

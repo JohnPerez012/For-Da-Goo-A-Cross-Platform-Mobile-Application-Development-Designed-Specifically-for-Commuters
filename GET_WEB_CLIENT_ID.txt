@@ -1,0 +1,105 @@
+╔══════════════════════════════════════════════════════════════╗
+║          HOW TO GET YOUR WEB CLIENT ID                       ║
+╚══════════════════════════════════════════════════════════════╝
+
+✅ .env FILE CREATED!
+
+But you need to add your Web Client ID...
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 STEP-BY-STEP INSTRUCTIONS:
+
+1. Go to Firebase Console:
+   https://console.firebase.google.com
+
+2. Select your project: "fordagooo"
+
+3. Click "Authentication" in the left sidebar
+
+4. Click "Sign-in method" tab at the top
+
+5. Find "Google" in the providers list
+
+6. Click on "Google" to expand it
+
+7. Make sure it's ENABLED (toggle should be ON)
+   - If not enabled, enable it now
+   - Enter your support email
+   - Click Save
+
+8. Look for "Web SDK configuration" section
+
+9. You'll see "Web client ID" with a long string like:
+   123456789-abcdefghijklmnop.apps.googleusercontent.com
+
+10. Click the COPY icon next to it
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📝 THEN UPDATE YOUR .env FILE:
+
+1. Open the .env file in your project root
+
+2. Find this line:
+   EXPO_PUBLIC_FIREBASE_WEB_CLIENT_ID=YOUR_WEB_CLIENT_ID_HERE.apps.googleusercontent.com
+
+3. Replace YOUR_WEB_CLIENT_ID_HERE with your actual Web Client ID
+
+4. Example (yours will be different):
+   EXPO_PUBLIC_FIREBASE_WEB_CLIENT_ID=123456789-abc123def456.apps.googleusercontent.com
+
+5. Save the file
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔍 WHAT IT LOOKS LIKE:
+
+In Firebase Console, you'll see something like:
+
+┌─────────────────────────────────────────────────┐
+│ Web SDK configuration                           │
+│                                                 │
+│ Web client ID                                   │
+│ 123456789-abc123.apps.googleusercontent.com  📋 │
+│                                                 │
+│ Web client secret                               │
+│ GOCSPX-xxxxxxxxxxxxxxxx                      📋 │
+└─────────────────────────────────────────────────┘
+
+Copy the Web client ID (the one ending with .apps.googleusercontent.com)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️ IMPORTANT NOTES:
+
+• Make sure Google Sign-In is ENABLED in Firebase
+• Copy the ENTIRE Web Client ID (including .apps.googleusercontent.com)
+• Don't share this file publicly (it's in .gitignore)
+• The Web Client ID is different from your API Key
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ AFTER UPDATING .env:
+
+Your .env file should look like this:
+
+EXPO_PUBLIC_FIREBASE_API_KEY=AIzaSyAXOO4sIzqRc8JIJCMqJ8UKp2CCkHxksRk
+EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=fordagooo.firebaseapp.com
+EXPO_PUBLIC_FIREBASE_PROJECT_ID=fordagooo
+EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=fordagooo.firebasestorage.app
+EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=916311091131
+EXPO_PUBLIC_FIREBASE_APP_ID=1:916311091131:web:6959e91d6748081cfb069e
+EXPO_PUBLIC_FIREBASE_DATABASE_URL=https://fordagooo-default-rtdb.asia-southeast1.firebasedatabase.app
+EXPO_PUBLIC_FIREBASE_WEB_CLIENT_ID=123456789-yourwebclientid.apps.googleusercontent.com
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 NEXT STEP:
+
+After updating .env with your Web Client ID, you're ready for:
+
+STEP 6: REBUILD THE APP
+Run: eas build --platform android --profile preview
+
+╚══════════════════════════════════════════════════════════════╝

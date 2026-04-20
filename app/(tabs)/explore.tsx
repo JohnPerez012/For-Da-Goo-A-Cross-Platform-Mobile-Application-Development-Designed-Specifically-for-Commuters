@@ -2,12 +2,25 @@ import { CebuMap } from '@/components/cebu-map';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useLocationSharing } from '@/hooks/use-location-sharing';
+import { useUserPresence } from '@/hooks/use-user-presence';
+import { useAuth } from '@/hooks/useAuth';
 import React, { useRef, useState } from 'react';
-import { Alert, Modal, SafeAreaView, StatusBar, StyleSheet, TouchableOpacity, View, Animated, PanResponder } from 'react-native';
+import { Alert, Animated, Modal, PanResponder, SafeAreaView, StatusBar, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 export default function ExploreScreen() {
-  const [userId] = useState(() => `user_${Math.random().toString(36).substr(2, 9)}`);
-  const { isSharing, sharedLocations, startSharing, stopSharing } = useLocationSharing(userId);
+  const { user } = useAuth();
+  // Use authenticated user ID instead of random ID
+  const userId = user?.uid || 'anonymous';
+  const { isSharing, sharedLocations, startSharing, stopSharing } = useLocationSharing(
+    userId,
+    user?.name || user?.email || 'User',
+    user?.photoURL
+  );
+  const { onlineUsers } = useUserPresence(
+    userId,
+    user?.name || user?.email || 'User',
+    user?.photoURL
+  );
   const [hasAgreed, setHasAgreed] = useState(false);
   const [showAgreementModal, setShowAgreementModal] = useState(false);
 
@@ -15,6 +28,10 @@ export default function ExploreScreen() {
   const [showBoundary, setShowBoundary] = useState(true);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedRoute, setSelectedRoute] = useState("Select Route");
+  
+  // Calculate counts
+  const activeCount = Object.keys(sharedLocations || {}).length;
+  const onlineCount = Object.keys(onlineUsers || {}).length;
   
   const menuOptions = [
     { label: "Via Kawit", type: "route" },
@@ -62,21 +79,21 @@ export default function ExploreScreen() {
   ).current;
 
   const handleTrackLocation = () => {
-  // If they haven't agreed yet, don't start tracking—show the modal instead!
-  if (!hasAgreed) {
-    setShowAgreementModal(true);
-    return;
-  }
+    // If they haven't agreed yet, don't start tracking—show the modal instead!
+    if (!hasAgreed) {
+      setShowAgreementModal(true);
+      return;
+    }
 
-  // If they HAVE agreed, proceed with your existing sharing logic
-  if (isSharing) {
-    stopSharing();
-    Alert.alert('FordaGo', 'Tracking stopped.');
-  } else {
-    startSharing();
-    Alert.alert('FordaGo', 'You are now live on the map!');
-  }
-};
+    // If they HAVE agreed, proceed with your existing sharing logic
+    if (isSharing) {
+      stopSharing();
+      Alert.alert('ForDaGoo', 'Tracking stopped.');
+    } else {
+      startSharing();
+      Alert.alert('ForDaGoo', 'You are now live on the map!');
+    }
+  };
 
   return (
     <ThemedView style={styles.container}>
@@ -137,10 +154,17 @@ export default function ExploreScreen() {
 
           {/* HEADER INFO CARD */}
           <View style={styles.headerCard}>
-            <ThemedText style={styles.titleText}>FordaGo Tracker</ThemedText>
-            <ThemedText style={styles.activeUsers}>
-              🟢 {Object.keys(sharedLocations || {}).length} Active Now
-            </ThemedText>
+            <ThemedText style={styles.titleText}>ForDaGoo Tracker</ThemedText>
+            <View style={styles.statusContainer}>
+              <View style={styles.statusItem}>
+                <View style={[styles.statusDot, styles.activeDot]} />
+                <ThemedText style={styles.statusText}>{activeCount} Active</ThemedText>
+              </View>
+              <View style={styles.statusItem}>
+                <View style={[styles.statusDot, styles.onlineDot]} />
+                <ThemedText style={styles.statusText}>{onlineCount} Online</ThemedText>
+              </View>
+            </View>
           </View>
         </View>
       </SafeAreaView>
@@ -155,23 +179,37 @@ export default function ExploreScreen() {
       >
         <View style={styles.sheetHandle} />
         
-        <ThemedText style={styles.sheetTitle}>Trip Overview</ThemedText>
+        <ThemedText style={styles.sheetTitle}>
+          {user?.role === 'driver' ? 'Driver Controls' : 'Trip Overview'}
+        </ThemedText>
 
         <View style={styles.sheetContent}>
+          {user?.role === 'driver' && (
+            <ThemedText style={styles.driverInfo}>
+              Share your location to help students track the bus in real-time
+            </ThemedText>
+          )}
+          
           <TouchableOpacity 
             style={[styles.mainButton, isSharing && styles.buttonActive]}
             onPress={handleTrackLocation}
             activeOpacity={0.8}
           >
             <ThemedText style={styles.buttonText}>
-              {isSharing ? 'STOP SHARING' : 'START MY LOCATION'}
+              {isSharing 
+                ? (user?.role === 'driver' ? 'STOP DRIVING' : 'STOP SHARING')
+                : (user?.role === 'driver' ? 'START DRIVING' : 'START MY LOCATION')
+              }
             </ThemedText>
           </TouchableOpacity>
 
           <View style={styles.statusRow}>
             <ThemedText style={styles.statusLabel}>Status:</ThemedText>
             <ThemedText style={isSharing ? styles.statusActive : styles.statusInactive}>
-              {isSharing ? " ● Live Tracking" : " ○ Offline"}
+              {isSharing 
+                ? (user?.role === 'driver' ? " ● Driving" : " ● Live Tracking")
+                : " ○ Offline"
+              }
             </ThemedText>
           </View>
         </View>
@@ -187,7 +225,7 @@ export default function ExploreScreen() {
           <View style={styles.agreementCard}>
             <ThemedText style={styles.agreementTitle}>Location Sharing</ThemedText>
             <ThemedText style={styles.agreementText}>
-              To show your location to other students, FordaGo needs to collect your GPS data. 
+              To show your location to other students, ForDaGoo needs to collect your GPS data. 
               Your location is only shared while "Sharing" is active.
             </ThemedText>
             
@@ -241,7 +279,7 @@ const styles = StyleSheet.create({
   headerCard: {
     flex: 1,
     backgroundColor: '#FFFFFF',
-    paddingVertical: 10,
+    paddingVertical: 12,
     paddingHorizontal: 15,
     borderRadius: 12,
     marginLeft: 10,
@@ -256,6 +294,32 @@ const styles = StyleSheet.create({
     fontSize: 16, 
     fontWeight: '800', 
     color: '#1C1C1E' 
+  },
+  statusContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 4,
+  },
+  statusItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  activeDot: {
+    backgroundColor: '#34C759', // Green for active (sharing location)
+  },
+  onlineDot: {
+    backgroundColor: '#007AFF', // Blue for online (in app but not sharing)
+  },
+  statusText: {
+    fontSize: 11,
+    color: '#8E8E93',
+    fontWeight: '500',
   },
   activeUsers: { 
     fontSize: 11, 
@@ -349,6 +413,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: '100%',
   },
+  driverInfo: {
+    fontSize: 13,
+    color: '#5E4352',
+    textAlign: 'center',
+    marginBottom: 15,
+    paddingHorizontal: 10,
+    lineHeight: 18,
+  },
   mainButton: {
     backgroundColor: '#F56476',
     width: '100%',
@@ -399,6 +471,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 24,
     width: '90%',
+    maxWidth: 500, // Limit width on web
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.2,

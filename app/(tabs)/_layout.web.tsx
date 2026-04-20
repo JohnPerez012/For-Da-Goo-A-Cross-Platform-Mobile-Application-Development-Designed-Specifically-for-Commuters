@@ -1,9 +1,6 @@
 import { Redirect, Tabs } from 'expo-router';
 import React from 'react';
 import { ActivityIndicator, View } from 'react-native';
-
-// Custom components
-import { CustomTabBar } from '@/components/custom-tab-bar';
 import { useAuth } from '../../hooks/useAuth';
 
 export default function TabLayout() {
@@ -23,12 +20,12 @@ export default function TabLayout() {
     return <Redirect href="/auth" />;
   }
 
-  // 3. If user IS logged in, show the tab bar with custom design
+  // 3. For web, hide the tab bar since navigation is in the page headers
   return (
     <Tabs
-      tabBar={(props) => <CustomTabBar {...props} />}
       screenOptions={{
         headerShown: false,
+        tabBarStyle: { display: 'none' }, // Hide bottom tab bar on web
       }}>
       <Tabs.Screen
         name="explore"

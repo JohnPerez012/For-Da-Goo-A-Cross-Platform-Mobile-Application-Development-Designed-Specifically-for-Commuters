@@ -1,0 +1,122 @@
+╔══════════════════════════════════════════════════════════════╗
+║         GOOGLE SIGN-IN SETUP CHECKLIST FOR MOBILE           ║
+╚══════════════════════════════════════════════════════════════╝
+
+📋 BEFORE YOU START:
+   □ Firebase project is set up
+   □ Android app is registered in Firebase
+   □ You have access to Firebase Console
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔧 STEP 1: GET WEB CLIENT ID
+   □ Go to Firebase Console
+   □ Click Authentication → Sign-in method
+   □ Click on Google provider
+   □ Copy Web client ID
+   □ Save it somewhere (you'll need it in Step 5)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔑 STEP 2: GENERATE SHA-1 CERTIFICATE
+   □ Open terminal in project folder
+   □ Run: cd android
+   □ Run: ./gradlew signingReport
+   □ Find the SHA1 line in output
+   □ Copy the SHA1 value (AA:BB:CC:DD:...)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📱 STEP 3: ADD SHA-1 TO FIREBASE
+   □ Go to Firebase Console → Project Settings
+   □ Scroll to "Your apps" section
+   □ Find your Android app
+   □ Click "Add fingerprint"
+   □ Paste SHA-1
+   □ Click Save
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📥 STEP 4: DOWNLOAD google-services.json
+   □ Download updated google-services.json from Firebase
+   □ Place in project root folder
+   □ Copy to android/app/ folder
+   □ Run: copy google-services.json android\app\google-services.json
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📝 STEP 5: CREATE .env FILE
+   □ Copy .env.example to .env
+   □ Open .env file
+   □ Add your Web Client ID from Step 1
+   □ Save the file
+
+   Example:
+   EXPO_PUBLIC_FIREBASE_WEB_CLIENT_ID=123456-abc.apps.googleusercontent.com
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🏗️ STEP 6: REBUILD THE APP
+   □ Run: eas build --platform android --profile preview
+   □ Wait for build to complete
+   □ Download the new APK
+   □ Install on your Android device
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ STEP 7: TEST
+   □ Open the app
+   □ Click Google button
+   □ Select Google account
+   □ Grant permissions
+   □ You should be logged in!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🐛 TROUBLESHOOTING:
+
+   ❌ "Developer Error" or "Error 10"
+      → SHA-1 not added to Firebase
+      → Download updated google-services.json
+      → Rebuild app
+
+   ❌ "Sign in failed"
+      → Check Web Client ID in .env
+      → Make sure it ends with .apps.googleusercontent.com
+
+   ❌ "Platform is not defined"
+      → Already fixed in code!
+      → Just rebuild the app
+
+   ❌ Button doesn't work
+      → Make sure .env file exists
+      → Rebuild the app
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📁 FILES YOU NEED:
+
+   ✅ .env (create from .env.example)
+   ✅ google-services.json (download from Firebase)
+   ✅ android/app/google-services.json (copy from root)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔒 SECURITY:
+
+   ⚠️ NEVER commit to Git:
+      • .env
+      • google-services.json
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📚 DOCUMENTATION:
+
+   • Quick guide: SETUP_SUMMARY.md
+   • Full guide: GOOGLE_SIGNIN_SETUP.md
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎉 DONE! Google Sign-In will work on mobile just like web!
+
+╚══════════════════════════════════════════════════════════════╝

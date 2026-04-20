@@ -1,20 +1,35 @@
-import { initializeApp } from "firebase/app";
-// 1. ADD THIS LINE
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getApp, getApps, initializeApp } from "firebase/app";
+import { getAuth, getReactNativePersistence, initializeAuth } from "firebase/auth";
 import { getDatabase } from "firebase/database";
+import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAfDuA7YNUHrxhlcMsj8dFl6shT4pQw8YM",
-  authDomain: "fordago-f0028.firebaseapp.com",
-  projectId: "fordago-f0028",
-  // 2. ADD THIS LINE (Check your Firebase Console for the exact URL)
-  databaseURL: "https://fordago-f0028-default-rtdb.asia-southeast1.firebasedatabase.app", 
-  storageBucket: "fordago-f0028.firebasestorage.app",
-  messagingSenderId: "886761925170",
-  appId: "1:886761925170:web:c7224f154d43e23ba16a2b"
+  apiKey: "AIzaSyAXOO4sIzqRc8JIJCMqJ8UKp2CCkHxksRk",
+  authDomain: "fordagooo.firebaseapp.com",
+  projectId: "fordagooo",
+  databaseURL: "https://fordagooo-default-rtdb.asia-southeast1.firebasedatabase.app",
+  storageBucket: "fordagooo.firebasestorage.app",
+  messagingSenderId: "916311091131",
+  appId: "1:916311091131:web:6959e91d6748081cfb069e"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// Initialize Firebase only if it hasn't been initialized yet
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-// 3. ADD AND EXPORT THIS
-export const database = getDatabase(app);
+// Initialize Auth with AsyncStorage persistence
+// This allows users to stay logged in between app sessions
+let auth;
+try {
+  auth = initializeAuth(app, {
+    persistence: getReactNativePersistence(AsyncStorage)
+  });
+} catch (error) {
+  // If auth is already initialized, just get it
+  auth = getAuth(app);
+}
+
+// Export Firebase services
+export const database = getDatabase(app); // Realtime Database - for location tracking only
+export const firestore = getFirestore(app); // Firestore - for user data and all other data
+export { auth };

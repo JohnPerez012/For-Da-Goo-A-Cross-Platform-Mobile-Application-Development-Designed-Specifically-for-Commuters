@@ -1,34 +1,59 @@
 import { database } from '@/config/firebase';
 import * as Location from 'expo-location';
-import { off, onValue, ref, set } from 'firebase/database';
+import { off, onValue, ref, remove, set } from 'firebase/database';
 import { useEffect, useState } from 'react';
 
 export interface SharedLocation {
   userId: string;
+  userName: string;
+  userPhotoURL?: string | null;
   latitude: number;
   longitude: number;
   timestamp: number;
   isSharing: boolean;
 }
 
-export function useLocationSharing(userId: string) {
+export function useLocationSharing(userId: string, userName?: string, userPhotoURL?: string | null) {
   const [isSharing, setIsSharing] = useState(false);
   const [sharedLocations, setSharedLocations] = useState<Record<string, SharedLocation>>({});
   const [error, setError] = useState<string | null>(null);
 
   console.log('=== useLocationSharing Hook Initialized ===');
   console.log('User ID:', userId);
+  console.log('User Name:', userName);
+  console.log('User Photo:', userPhotoURL);
+
+  // Cleanup function to stop sharing and remove location data
+  const cleanupLocationSharing = async (userIdToClean: string) => {
+    console.log('=== CLEANUP LOCATION SHARING ===');
+    
+    // Clear interval
+    if ((global as any).locationSharingInterval) {
+      console.log('Clearing location update interval');
+      clearInterval((global as any).locationSharingInterval);
+      (global as any).locationSharingInterval = null;
+    }
+
+    // Remove location data from database completely
+    try {
+      console.log('Removing location data from Firebase for user:', userIdToClean);
+      await remove(ref(database, `sharedLocations/${userIdToClean}`));
+      console.log('Location data removed successfully');
+    } catch (err: any) {
+      console.log('Error removing location data:', err.message);
+    }
+  };
 
   // Listen to all shared locations
   useEffect(() => {
     console.log('Setting up Firebase listener for shared locations...');
     const locationsRef = ref(database, 'sharedLocations');
     
-    const unsubscribe = onValue(locationsRef, (snapshot) => {
+    const unsubscribe = onValue(locationsRef, async (snapshot) => {
       console.log('Firebase data received:', snapshot.val());
       const data = snapshot.val();
       if (data) {
-        // Filter out old locations (older than 5 minutes)
+        // Filter out old locations (older than 5 minutes) and inactive locations
         const now = Date.now();
         const activeLocations: Record<string, SharedLocation> = {};
         
@@ -37,7 +62,11 @@ export function useLocationSharing(userId: string) {
           const age = now - location.timestamp;
           console.log(`Location ${key}: isSharing=${location.isSharing}, age=${Math.round(age/1000)}s`);
           
-          if (location.isSharing && age < 5 * 60 * 1000) {
+          // Only show locations that are actively sharing AND recent
+          if (location.isSharing === true && age < 5 * 60 * 1000) {
+            // Ensure we have default values for missing data
+            location.userName = location.userName || 'User';
+            location.userPhotoURL = location.userPhotoURL || null;
             activeLocations[key] = location;
           }
         });
@@ -60,6 +89,52 @@ export function useLocationSharing(userId: string) {
       off(locationsRef);
     };
   }, []);
+
+  // Cleanup on component unmount or page unload
+  useEffect(() => {
+    // Cleanup when component unmounts
+    return () => {
+      if (isSharing) {
+        console.log('Component unmounting - cleaning up location sharing');
+        cleanupLocationSharing(userId);
+      }
+    };
+  }, [isSharing, userId]);
+
+  // Cleanup when browser tab/window closes (web only)
+  useEffect(() => {
+    // Only run on web platform
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
+      return;
+    }
+
+    const handleBeforeUnload = () => {
+      if (isSharing) {
+        console.log('Page unloading - cleaning up location sharing');
+        // Use synchronous method for beforeunload
+        navigator.sendBeacon(
+          `https://fordagooo-default-rtdb.asia-southeast1.firebasedatabase.app/sharedLocations/${userId}.json`,
+          JSON.stringify(null)
+        );
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden && isSharing) {
+        console.log('Tab hidden - stopping location sharing');
+        stopSharing();
+      }
+    };
+
+    // Add event listeners for web
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isSharing, userId]);
 
   // Start sharing location
   const startSharing = async () => {
@@ -89,6 +164,8 @@ export function useLocationSharing(userId: string) {
 
         const locationData: SharedLocation = {
           userId,
+          userName: userName || 'User',
+          userPhotoURL: userPhotoURL || null,
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
           timestamp: Date.now(),
@@ -113,6 +190,8 @@ export function useLocationSharing(userId: string) {
 
           const locationData: SharedLocation = {
             userId,
+            userName: userName || 'User',
+            userPhotoURL: userPhotoURL || null,
             latitude: location.coords.latitude,
             longitude: location.coords.longitude,
             timestamp: Date.now(),
@@ -141,28 +220,7 @@ export function useLocationSharing(userId: string) {
   const stopSharing = async () => {
     console.log('=== STOP SHARING CALLED ===');
     setIsSharing(false);
-    
-    // Clear interval
-    if ((global as any).locationSharingInterval) {
-      console.log('Clearing location update interval');
-      clearInterval((global as any).locationSharingInterval);
-      (global as any).locationSharingInterval = null;
-    }
-
-    // Update database to mark as not sharing
-    try {
-      console.log('Updating Firebase to mark as not sharing');
-      await set(ref(database, `sharedLocations/${userId}`), {
-        userId,
-        latitude: 0,
-        longitude: 0,
-        timestamp: Date.now(),
-        isSharing: false,
-      });
-      console.log('Successfully stopped sharing location');
-    } catch (err) {
-      console.error('Error stopping location share:', err);
-    }
+    await cleanupLocationSharing(userId);
   };
 
   return {

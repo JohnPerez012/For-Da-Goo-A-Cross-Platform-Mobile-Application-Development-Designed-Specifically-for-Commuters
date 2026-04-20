@@ -1,7 +1,7 @@
 import * as Location from 'expo-location';
 import React, { useRef, useState } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
-import MapView, { Polygon, Polyline } from 'react-native-maps';
+import { Alert, Image, StyleSheet, View } from 'react-native';
+import MapView, { Marker, Polygon, Polyline } from 'react-native-maps';
 import { SharedLocation } from '../hooks/use-location-sharing';
 
 
@@ -545,6 +545,35 @@ return (
             strokeWidth={4}
           />
         )}
+
+        {/* Shared Location Markers */}
+        {sharedLocations && Object.entries(sharedLocations).map(([id, location]) => (
+          <Marker
+            key={id}
+            coordinate={{
+              latitude: location.latitude,
+              longitude: location.longitude,
+            }}
+            title={location.userName || 'User'}
+            description={`Last updated: ${new Date(location.timestamp).toLocaleTimeString()}`}
+            anchor={{ x: 0.5, y: 0.5 }}
+          >
+            <View style={styles.markerContainer}>
+              {location.userPhotoURL ? (
+                <Image
+                  source={{ uri: location.userPhotoURL }}
+                  style={styles.markerImage}
+                  onError={() => console.log('Failed to load image')}
+                />
+              ) : (
+                <Image
+                  source={require('@/assets/images/default_System_Profile.jpg')}
+                  style={styles.markerImage}
+                />
+              )}
+            </View>
+          </Marker>
+        ))}
       </MapView>
     </View>
   );
@@ -560,6 +589,24 @@ const styles = StyleSheet.create({
   },
   map: {
     ...StyleSheet.absoluteFillObject, // Better than 100% for Maps
+  },
+  markerContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 3,
+    borderColor: '#F56476',
+    backgroundColor: 'white',
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  markerImage: {
+    width: '100%',
+    height: '100%',
   },
   // ... rest of your buttons (they look great!)
   button: {

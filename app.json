@@ -1,36 +1,42 @@
 {
   "expo": {
-    "name": "Playground",
-    "slug": "Playground",
+    "name": "ForDaGoo",
+    "slug": "fordagoo",
+    "scheme": "fordagoo",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "playground",
+    "icon": "./assets/images/fordagoo.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/c1882f7e-04ef-4a65-8619-831ad73d45e8"
+    },
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundColor": "#FFFFFF",
+        "foregroundImage": "./assets/images/fordagoo.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "monochromeImage": "./assets/images/fordagoo.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.group_2expo.ForDaGooo"
     },
     "web": {
-      "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/fordagoo.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/fordagoo.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff",
@@ -38,11 +44,23 @@
             "backgroundColor": "#000000"
           }
         }
+      ],
+      [
+        "expo-updates",
+        {
+          "username": "johncadaro0"
+        }
       ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "9c182b0e-5a8a-4a66-8c51-16a35ec49117"
+      }
     }
   }
 }
